@@ -94,6 +94,18 @@ functions:
             type: token
             identitySource: method.request.header.Authorization
 
+  listItinerarios:
+    handler: src/functions/itinerario/list.handler
+    events:
+      - http:
+          path: /itinerario
+          method: get
+          cors: true
+          authorizer:
+            name: verifyToken
+            type: token
+            identitySource: method.request.header.Authorization
+
   verifyToken:
     handler: src/middlewares/auth.verifyToken
 

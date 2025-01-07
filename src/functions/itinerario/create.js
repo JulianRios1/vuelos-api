@@ -3,7 +3,8 @@ const { DynamoDB } = require('aws-sdk');
 const dynamoDb = new DynamoDB.DocumentClient();
 const { validateItinerario } = require('../../middlewares/validator');
 
-module.exports.handler = async (event) => {
+// Primero definimos la función createItinerario
+const createItinerario = async (event) => {
   try {
     const data = JSON.parse(event.body);
     
@@ -41,6 +42,7 @@ module.exports.handler = async (event) => {
       body: JSON.stringify(params.Item)
     };
   } catch (error) {
+    console.error('Error creating itinerario:', error);
     return {
       statusCode: 500,
       body: JSON.stringify({ error: 'Could not create the itinerario' })
@@ -48,5 +50,5 @@ module.exports.handler = async (event) => {
   }
 };
 
-// Exportamos la función envuelta en el middleware
+// Luego exportamos la función envuelta en el middleware
 module.exports.handler = withAuth(createItinerario);

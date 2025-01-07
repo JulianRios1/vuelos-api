@@ -19,26 +19,38 @@ const verifyToken = async (event) => {
     // Verificar el token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    // Adjuntar la información del usuario al contexto
+    // Aplanar el contexto para solo usar tipos primitivos
     const context = {
-      user: {
-        email: decoded.email,
-        role: decoded.role
-      }
+      userEmail: decoded.email,        // string
+      userRole: decoded.role,          // string
+      tokenIssueTime: decoded.iat?.toString(),    // convertido a string
+      tokenExpiration: decoded.exp?.toString()     // convertido a string
     };
 
     return generatePolicy(decoded.email, 'Allow', event.routeArn || event.methodArn, context);
   } catch (error) {
-    console.error('Auth Error:', error);
+    console.trace('Auth Error:', error);
     return generatePolicy('user', 'Deny', event.routeArn || event.methodArn);
   }
 };
 
 // Función auxiliar para generar la política de IAM
 const generatePolicy = (principalId, effect, resource, context = {}) => {
+  // Validar que todos los valores del contexto sean primitivos
+  const sanitizedContext = Object.entries(context).reduce((acc, [key, value]) => {
+    // Solo permitir string, number, o boolean
+    if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') {
+      acc[key] = value;
+    } else if (value != null) {
+      // Convertir otros valores a string si no son null/undefined
+      acc[key] = String(value);
+    }
+    return acc;
+  }, {});
+
   const authResponse = {
     principalId,
-    context,
+    context: sanitizedContext,
     policyDocument: {
       Version: '2012-10-17',
       Statement: [{
@@ -67,11 +79,15 @@ const withAuth = (handler) => {
           body: JSON.stringify({ error: 'No token provided' })
         };
       }
-
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
-      // Adjuntar la información del usuario al evento
-      event.user = decoded;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      // Aplanar la información del usuario antes de adjuntarla al evento
+      event.user = {
+        email: decoded.email,
+        role: decoded.role,
+        iat: decoded.iat,
+        exp: decoded.exp
+      };
 
       // Ejecutar el handler original
       return await handler(event, context);

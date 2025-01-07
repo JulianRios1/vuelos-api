@@ -2,6 +2,7 @@ service: vuelos-api
 
 frameworkVersion: '4'
 
+
 provider:
   name: aws
   runtime: nodejs20.x
@@ -54,6 +55,38 @@ custom:
         - dev
   existingResources:
     dynamoDBTableName: "${self:provider.environment.DYNAMODB_TABLE}"
+  autoswagger:
+    title: 'Vuelos API'
+    apiType: 'http'
+    generateSwaggerOnDeploy: true
+    useStage: true
+    basePath: '/dev'
+    swaggerPath: 'swagger'
+    swaggerUI: true # Habilitar Swagger UI
+    schemas: # Si tienes esquemas personalizados
+      - src/schemas/
+    host: 
+      - 'localhost:3000'
+      - 'your-api-gateway-id.execute-api.region.amazonaws.com'
+    schemes:
+      - http
+      - https
+    cors: true
+    typefiles: ['./src/types/itinerario.d.ts'] # Si usas TypeScript
+
+  swagger-ui: # Configuración específica para la UI
+    enabled: true
+    path: swagger-ui # Ruta donde se servirá la UI
+    apiType: http
+    title: 'Vuelos API Documentation'
+    oauthConfig:
+      clientId: ''
+      clientSecret: ''
+    swaggerConfig:
+      docExpansion: 'list'
+      filter: true
+      showRequestHeaders: true
+      supportedSubmitMethods: ['get', 'post', 'put', 'delete']
 
 functions:
   register:
@@ -141,3 +174,12 @@ plugins:
   - serverless-offline
   - serverless-dynamodb-local
   - serverless-dotenv-plugin
+  - serverless-auto-swagger
+
+swaggerUI:
+  handler: src/functions/swagger/handler.serveSwaggerUI
+  events:
+    - http:
+        path: swagger-ui
+        method: get
+        cors: true

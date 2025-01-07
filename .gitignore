@@ -4,3 +4,7 @@ node_modeles/
 node_modules
 node_modules
 .DS_Store
+./swagger
+/swagger
+.terraform
+.terraform.lock.hcl

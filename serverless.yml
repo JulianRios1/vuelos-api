@@ -1,0 +1,131 @@
+service: vuelos-api
+
+frameworkVersion: '4'
+
+provider:
+  name: aws
+  runtime: nodejs20.x
+  stage: ${opt:stage, 'dev'}
+  region: us-east-1
+  httpApi:
+    cors:
+      allowedOrigins: ['*']
+      allowedHeaders: ['Content-Type', 'Authorization']
+      allowedMethods: ['POST', 'GET', 'OPTIONS']
+      maxAge: 300
+  environment:
+    NODE_ENV: ${opt:stage, 'dev'}
+    DYNAMODB_TABLE: ${self:service}-${opt:stage, self:provider.stage}
+    USERS_TABLE: ${self:service}-users-${opt:stage, self:provider.stage}
+    JWT_SECRET: ${self:custom.jwtSecret.${opt:stage, self:provider.stage}}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource: 
+            - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DYNAMODB_TABLE}"
+            - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}"
+  
+custom:
+  jwtSecret:
+    dev: 'QdMipkJI7bbELNEOE9qcGe3pfpwkdBnlvGooLjxr'
+    staging: ${ssm:/vuelos-api/staging/jwt-secret, 'staging-default-jwt-secret'}
+    prod: ${ssm:/vuelos-api/prod/jwt-secret, 'prod-default-jwt-secret'}
+  serverlessOffline:
+    httpPort: 3000
+    noPrependStageInUrl: true
+    apiGateway:
+      shouldStartOffline: true
+      corsAllowOrigin: '*'
+      corsAllowHeaders: ['Content-Type', 'Authorization']
+    dynamodb:
+      start:
+        port: 8000
+        inMemory: true
+        migrate: true
+      stages:
+        - dev
+  existingResources:
+    dynamoDBTableName: "${self:provider.environment.DYNAMODB_TABLE}"
+
+functions:
+  register:
+    handler: src/functions/auth/register.handler
+    events:
+      - httpApi:
+          path: /auth/register
+          method: POST
+
+  login:
+    handler: src/functions/auth/login.handler
+    events:
+      - httpApi:
+          path: /auth/login
+          method: POST
+
+  createItinerario:
+    handler: src/functions/itinerario/create.handler
+    events:
+      - http:
+          path: /itinerario
+          method: post
+          cors: true
+          authorizer:
+            name: verifyToken
+            type: token
+            identitySource: method.request.header.Authorization
+
+  getItinerario:
+    handler: src/functions/itinerario/get.handler
+    events:
+      - http:
+          path: /itinerario/{idVuelo}
+          method: get
+          cors: true
+          authorizer:
+            name: verifyToken
+            type: token
+            identitySource: method.request.header.Authorization
+
+  verifyToken:
+    handler: src/middlewares/auth.verifyToken
+
+resources:
+  Resources:
+    UsersTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.USERS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: email
+            AttributeType: S
+        KeySchema:
+          - AttributeName: email
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+    ItinerariosTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: Retain
+      Properties:
+        TableName: ${self:provider.environment.DYNAMODB_TABLE}
+        AttributeDefinitions:
+          - AttributeName: idVuelo
+            AttributeType: S
+        KeySchema:
+          - AttributeName: idVuelo
+            KeyType: HASH
+        BillingMode: PAY_PER_REQUEST
+
+plugins:
+  - serverless-offline
+  - serverless-dynamodb-local
+  - serverless-dotenv-plugin

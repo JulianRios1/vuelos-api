@@ -135,8 +135,8 @@ serverless deploy --stage prod
 ## Documentación API
 
 La documentación de la API está disponible en:
-- Desarrollo: https://7nwl8wu7x7.execute-api.us-east-1.amazonaws.com/dev/swagger
-- Producción: https://7nwl8wu7x7.execute-api.us-east-1.amazonaws.com/prod/swagger
+- Desarrollo: https://7nwl8wu7x7.execute-api.us-east-1.amazonaws.com/dev/dev/swagger
+- Producción: https://gwfe99mkm9.execute-api.us-east-1.amazonaws.com/prod/prod/swagger
 
 ## Documentación Pruebas
 

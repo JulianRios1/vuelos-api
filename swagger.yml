@@ -1,58 +1,58 @@
 # swagger.yml
 openapi: 3.0.0
 info:
-  title: Vuelos API
-  version: 1.0.0
-  description: API para gestión de itinerarios de vuelos
+    title: Vuelos API
+    version: 1.0.0
+    description: API para gestión de itinerarios de vuelos
 
 paths:
-  /itinerario:
-    post:
-      summary: Crear nuevo itinerario
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - idVuelo
-                - tipoVuelo
-                - estadoVuelo
-              properties:
-                idVuelo:
-                  type: string
-                tipoVuelo:
-                  type: string
-                  enum: [Charter, Cargo]
-                observaciones:
-                  type: string
-                estadoVuelo:
-                  type: string
-                cantidadTripulantes:
-                  type: integer
-                  minimum: 1
-                pesoCarga:
-                  type: number
-                  minimum: 0
-                cantidadPasajeros:
-                  type: integer
-                  minimum: 0
-                fechaSalida:
-                  type: string
-                  format: date-time
-                rutaVouchers:
-                  type: string
-                rutaAprobacionAerocivil:
-                  type: string
-                destino:
-                  type: string
+    /itinerario:
+        post:
+            summary: Crear nuevo itinerario
+            security:
+                - bearerAuth: []
+            requestBody:
+                required: true
+                content:
+                    application/json:
+                        schema:
+                            type: object
+                            required:
+                                - idVuelo
+                                - tipoVuelo
+                                - estadoVuelo
+                            properties:
+                                idVuelo:
+                                    type: string
+                                tipoVuelo:
+                                    type: string
+                                    enum: [Charter, Cargo]
+                                observaciones:
+                                    type: string
+                                estadoVuelo:
+                                    type: string
+                                cantidadTripulantes:
+                                    type: integer
+                                    minimum: 1
+                                pesoCarga:
+                                    type: number
+                                    minimum: 0
+                                cantidadPasajeros:
+                                    type: integer
+                                    minimum: 0
+                                fechaSalida:
+                                    type: string
+                                    format: date-time
+                                rutaVouchers:
+                                    type: string
+                                rutaAprobacionAerocivil:
+                                    type: string
+                                destino:
+                                    type: string
 
 components:
-  securitySchemes:
-    bearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
+    securitySchemes:
+        bearerAuth:
+            type: http
+            scheme: bearer
+            bearerFormat: JWT

@@ -135,8 +135,8 @@ serverless deploy --stage prod
 ## Documentación API
 
 La documentación de la API está disponible en:
-- Desarrollo: https://7nwl8wu7x7.execute-api.us-east-1.amazonaws.com/dev/swagger
-- Producción: https://7nwl8wu7x7.execute-api.us-east-1.amazonaws.com/prod/swagger
+- Desarrollo: https://7nwl8wu7x7.execute-api.us-east-1.amazonaws.com/dev/dev/swagger
+- Producción: https://gwfe99mkm9.execute-api.us-east-1.amazonaws.com/prod/prod/swagger
 
 ## Documentación Pruebas
 
@@ -196,24 +196,52 @@ terraform -chdir=terraform apply
 #### GitHub Actions
 Crear `.github/workflows/deploy.yml`:
 ```yaml
-name: Deploy
+name: Deploy to AWS
 
 on:
   push:
-    branches: [ master ]
+    branches:
+      - master
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v2
+      # 1. Checkout el repositorio
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. Configurar las credenciales de AWS
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v3
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+
+      # 3. Instalar Terraform
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.0
+
+      # 4. Inicializar Terraform
+      - name: Terraform Init
+        run: cd terraform && terraform init
+
+      # 5. Aplicar Terraform
+      - name: Terraform Apply
+        run: cd terraform && terraform apply -auto-approve
+
+      # 6. Instalar dependencias del proyecto Serverless
       - name: Install dependencies
-        run: npm ci
-      - name: Deploy
-        run: serverless deploy
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: cd serverless && npm install
+
+      # 7. Desplegar con Serverless
+      - name: Deploy Serverless
+        run: cd serverless && npx serverless deploy --stage prod
+
 ```
 
 

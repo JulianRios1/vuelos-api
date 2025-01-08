@@ -33,3 +33,7 @@ Este es el primer lanzamiento oficial del proyecto **Vuelos API**. Incluye las f
 ### **Documentación**
 - Documentación básica incluida en `README.md` para instalar y desplegar el proyecto.
 
+## [v1.0.0] - 2025-01-07
+
+### 🚀 **First Release**
+Se realizan ajustes al proceso de github action y rutas en readme.
